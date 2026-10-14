@@ -1,0 +1,53 @@
+## Interface: 16001
+## Title: Poulpix UI Immersive
+## Notes: Minimal, peripheral HUD with fading, masks and vignette, situation camera and waypoints.
+## Author: Poulpix
+## Version: 0.9.70
+## SavedVariables: PoulpixUIImmersiveDB, ImmersiveHUDDB
+## OptionalDeps:
+## X-License: All rights reserved
+## X-AI-Policy: No AI training, scraping or code generation (see LICENSE.txt)
+Core\poulpix_ui_defaults.lua
+Locales\poulpix_ui_locales.lua
+Locales\poulpix_ui_locales_world.lua
+Locales\poulpix_ui_locales_wave2.lua
+Locales\poulpix_ui_locales_focus.lua
+Locales\poulpix_ui_locales_bags.lua
+Core\poulpix_ui_profiles.lua
+Core\poulpix_ui_core.lua
+Core\poulpix_ui_share.lua
+HUD\poulpix_ui_shapes.lua
+HUD\poulpix_ui_brush.lua
+HUD\poulpix_ui_frames.lua
+HUD\poulpix_ui_focus.lua
+HUD\poulpix_ui_actionbars.lua
+HUD\poulpix_ui_nameplates.lua
+World\poulpix_ui_world.lua
+World\poulpix_ui_camera.lua
+World\poulpix_ui_waypoint.lua
+HUD\poulpix_ui_simulation.lua
+Effects\poulpix_ui_fxdata.lua
+Effects\poulpix_ui_conditions.lua
+Effects\poulpix_ui_effects.lua
+HUD\poulpix_ui_reminders.lua
+Skin\poulpix_ui_skin_engine.lua
+Skin\poulpix_ui_skin_tooltips.lua
+Skin\poulpix_ui_skin_text.lua
+Skin\poulpix_ui_skin_controls.lua
+Skin\poulpix_ui_skin_menus.lua
+Skin\poulpix_ui_skin_widgets.lua
+Skin\poulpix_ui_skin_windows.lua
+Skin\poulpix_ui_skin_win_guild.lua
+Skin\poulpix_ui_skin_win_charsheet.lua
+Skin\poulpix_ui_skin_win_settings.lua
+Skin\poulpix_ui_skin_win_charpages.lua
+Skin\poulpix_ui_skin_win_misc.lua
+Skin\poulpix_ui_skin_group.lua
+Skin\poulpix_ui_skin_apply.lua
+Skin\poulpix_ui_skin_diag.lua
+HUD\poulpix_ui_cooldowns.lua
+HUD\poulpix_ui_extras.lua
+Bags\poulpix_ui_bags_data.lua
+Bags\poulpix_ui_bags.lua
+Settings\poulpix_ui_options.lua
+Settings\poulpix_ui_report.lua
