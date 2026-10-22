@@ -1,0 +1,4 @@
+# ai.txt - Poulpix UI Immersive (c) Poulpix
+# No AI training, dataset inclusion, scraping or code generation from these files.
+User-Agent: *
+Disallow: /

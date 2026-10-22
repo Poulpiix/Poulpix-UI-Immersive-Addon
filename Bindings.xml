@@ -1,0 +1,5 @@
+<Bindings>
+	<!-- Poulpix UI Immersive (r1009cp): the fishing key (Key Bindings > AddOns). The button is created by poulpix_ui_tools.lua.
+	     r1009cu: no header of its own (it left an empty row under "Add-ons" in the game's list). -->
+	<Binding name="CLICK PoulpixUIFishButton:LeftButton" category="ADDONS"/>
+</Bindings>
