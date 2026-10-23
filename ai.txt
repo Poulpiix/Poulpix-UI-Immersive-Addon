@@ -1,4 +1,12 @@
-# ai.txt - Poulpix UI Immersive (c) Poulpix
-# No AI training, dataset inclusion, scraping or code generation from these files.
+# Poulpix UI Immersive (c) Poulpix. All rights reserved.
+# Text and data mining and AI training prohibited without the author's
+# written consent (Article 4, Directive (EU) 2019/790). Details: LICENSE.md.
+# noai, noimageai
+
 User-Agent: *
 Disallow: /
+Disallow: *.lua
+Disallow: *.toc
+Disallow: *.ttf
+Disallow: *.md
+Disallow: *.xml
