@@ -15,7 +15,7 @@ local LIST_ROWS = 12
 local ROW_H = 20
 local T = function(k) return ns.T(k) end
 local BLOCK_KEYS = { "player", "icon", "pbuffs", "pdebuffs", "power", "cast", "target", "tcast", "tbuffs", "tdebuffs", "focus", "fcast", "fbuffs", "fdebuffs", "minimap", "clock", "quest", "prompts",
-    "bar1", "bar2", "bar3", "bar4", "bar5", "bar6", "bar7", "bar8", "stance", "pet", "xp", "micro", "bags", "location", "cdEssential", "cdUtility", "cdBuffs", "totems", "groupBadge", "tot", "petHp", "groupFrames", "raidFrames", "chatFrame", "damageMeter", "lootRoll", "combo",
+    "bar1", "bar2", "bar3", "bar4", "bar5", "bar6", "bar7", "bar8", "stance", "pet", "xp", "micro", "bags", "location", "cdEssential", "cdUtility", "cdBuffs", "groupBadge", "tot", "petHp", "groupFrames", "raidFrames", "chatFrame", "damageMeter", "lootRoll", "combo",
     "threat", "swing", "callTotems", "flight", "lootFeed", "junk", "fps", "kick", "dataBar", "selfText", "alerts", "mobility", "crosshair" }
 local BLOCK_NAMES = {
     player = "Health bar", icon = "Class icon", pbuffs = "Your buffs", pdebuffs = "Your debuffs",
@@ -25,7 +25,7 @@ local BLOCK_NAMES = {
     bar4 = "Right bar 1", bar5 = "Right bar 2", bar6 = "Action bar 6", bar7 = "Action bar 7", bar8 = "Action bar 8", stance = "Stance bar", pet = "Pet bar", xp = "XP bar",
     micro = "Game menu", bags = "Bags", location = "Location",
     cdEssential = "Essential cooldowns", cdUtility = "Utility cooldowns", cdBuffs = "Tracked buffs",
-    totems = "Totems", groupBadge = "Raid group badge", tot = "Target of target", petHp = "Pet health bar",
+    groupBadge = "Raid group badge", tot = "Target of target", petHp = "Pet health bar",
     groupFrames = "Group frames", raidFrames = "Raid frames", chatFrame = "Chat window", damageMeter = "Damage meter", lootRoll = "Loot rolls", combo = "Combo points",
     threat = "Threat", swing = "Swing timer", callTotems = "Call totem bar", flight = "Flight timer",
     lootFeed = "Loot feed", junk = "Junk items", fps = "Frame rate", kick = "Interrupt bar",
@@ -104,7 +104,7 @@ local COLOR_LIST = {
     { "mask", "Mask" }, { "vignette", "Vignette" }, { "minimapBorder", "Minimap border" },
 }
 local LOOK_FAMILIES = {
-    { label = "Player", blocks = { "player", "icon", "power", "combo", "cast", "pbuffs", "pdebuffs", "xp", "totems", "groupBadge", "petHp" },
+    { label = "Player", blocks = { "player", "icon", "power", "combo", "cast", "pbuffs", "pdebuffs", "xp", "groupBadge", "petHp" },
       colors = { "health", "healthLow", "healthBg", "trail", "mana", "rage", "energy", "focus", "combo", "cast", "castLocked",
           "xp", "xpRested", "absorb", "incomingHeal", "icon" } },
     { label = "Target", blocks = { "target", "tcast", "tbuffs", "tdebuffs", "tot" },
@@ -1091,15 +1091,6 @@ PAGES.player = function(B, db)
     B.Check("Show the pet health bar", EX("pet"), EXS("pet"))
     B.Check("Show the pet name", function() return db.extras.petName ~= false end, EXS("petName"), EX("pet"))
     BlockSize(B, db, "petHp", 40, 400, 14, 40, EX("pet"))
-    B.Section("Totems")
-    B.Note("Totems note")
-    B.Check("Show your totems", EX("totems"), EXS("totems"))
-    B.Check("Timer on the totem icons", function() return db.extras.totemTimer ~= false end, EXS("totemTimer"), EX("totems"))
-    B.Check("Show empty totem slots", EX("totemEmpty"), EXS("totemEmpty"), EX("totems"))
-    B.Check("Hide the game's own totem buttons", EX("totemHideBlizz"), EXS("totemHideBlizz"), EX("totems"))
-    B.Row()
-    B.Slider("Totem icon size", EX("totemSize"), EXS("totemSize"), 16, 64, 1, "%d", EX("totems"))
-    B.Slider("Totem icon spacing", EX("totemGap"), EXS("totemGap"), 0, 20, 1, "%d", EX("totems"))
     B.Section("Raid group badge")
     B.Check("Show my raid group number", EX("groupBadge"), EXS("groupBadge"))
     B.Slider("Group number text size", EX("groupBadgeSize"), EXS("groupBadgeSize"), 9, 32, 1, "%d", EX("groupBadge"))
@@ -2601,7 +2592,7 @@ local BLOCK_PAGE = {
     location = { "world", "Location" },
     cdBuffs = { "cooldowns", "Cooldown manager" }, cdEssential = { "cooldowns", "Cooldown manager" },
     cdUtility = { "cooldowns", "Cooldown manager" },
-    totems = { "player", "Totems" }, groupBadge = { "player", "Raid group badge" }, petHp = { "player", "Pet health bar" },
+    groupBadge = { "player", "Raid group badge" }, petHp = { "player", "Pet health bar" },
     tot = { "target", "Target of target" },
     groupFrames = { "group", "Group and raid frames" }, raidFrames = { "group", "Group and raid frames" },
     chatFrame = { "chat", "Chat" }, damageMeter = { "meter", "Damage meter" }, lootRoll = { "windows", "Loot rolls" }, combo = { "player", "Combo points" },

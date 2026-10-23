@@ -2,7 +2,7 @@
 ## Title: Poulpix UI Immersive
 ## Notes: Minimal, peripheral HUD with fading, masks and vignette, situation camera and waypoints.
 ## Author: Poulpix
-## Version: 0.9.88
+## Version: 0.9.89
 ## SavedVariables: PoulpixUIImmersiveDB, ImmersiveHUDDB
 ## OptionalDeps:
 ## X-License: All rights reserved
@@ -20,6 +20,7 @@ Poulpix_UI_Immersive_Locales\poulpix_ui_locales_auto.lua
 Poulpix_UI_Immersive_Locales\poulpix_ui_locales_group.lua
 Poulpix_UI_Immersive_Locales\poulpix_ui_locales_hud.lua
 Poulpix_UI_Immersive_Locales\poulpix_ui_locales_windows.lua
+Poulpix_UI_Immersive_Locales\poulpix_ui_locales_setup.lua
 Poulpix_UI_Immersive_Core\poulpix_ui_profiles.lua
 Poulpix_UI_Immersive_Core\poulpix_ui_core.lua
 Poulpix_UI_Immersive_Core\poulpix_ui_share.lua
@@ -70,3 +71,4 @@ Poulpix_UI_Immersive_Skin\poulpix_ui_win_classic.lua
 Poulpix_UI_Immersive_Skin\poulpix_ui_win_macros.lua
 Poulpix_UI_Immersive_Settings\poulpix_ui_options.lua
 Poulpix_UI_Immersive_Settings\poulpix_ui_report.lua
+Poulpix_UI_Immersive_Settings\poulpix_ui_setup.lua

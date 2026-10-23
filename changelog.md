@@ -1,8 +1,31 @@
-# Poulpix UI Immersive — What's new  (0.9.88)
+# Poulpix UI Immersive — What's new  (0.9.89)
 
 Changes to the addon, day by day, newest first.
 
 ---
+
+## October 23, 2026 (0.9.89)
+**New**
+- **Setup wizard**: the first time you play a character with the addon, a short tour in your game's language shows the main features page by page (profile, HUD, player and target, action bars, nameplates, group, combat tools, bags, windows and chat, minimap and quests, camera and world, tools). Each option is explained in a line and shows on screen as soon as you tick it, with sample data on every element; keep the page, undo it and move on, or skip the whole tour. It comes back where you left it after a /reload, waits for the end of combat, and never shows again on that character once done or skipped. Characters that already used the addon are not asked. Run it again with /ui setup (or /ui tutorial).
+- **/ui**: the addon's commands also answer to /ui.
+
+**Changed**
+- **Your buffs and debuffs** are sorted by time left, in the same order in and out of combat: weapon enchants first, then the auras by time left, auras without a timer at the far end.
+- **/ih report**: a "Combat auras" part tells how your buffs and debuffs are drawn during a fight (take the report in combat).
+
+**Fixed**
+- **Your buffs and debuffs** in the "Bars" style keep their look in combat: icon, name, bar and time left, in one column after your weapon enchants (they turned into bare icons with a timer).
+- **Aura backgrounds during a fight** (your buffs and debuffs, target and focus auras): each aura gets its own background, which comes and goes with it, instead of one background stuck at its largest size.
+- **Blizzard windows** opened during a fight (game menu, settings, pop-ups...) take the addon's theme straight away.
+- **Distance to your target and focus**: no more blocked actions in combat when your target is friendly.
+- **Chat and damage meter**: after a /reload or a login they show up at their place straight away (they waited a few seconds at the game's own place before moving).
+- **Unlock and move**: while the game counts you in combat, one message every few seconds instead of one per click.
+- **Lock button** (Unlock and move): in the addon's look instead of the game's red button.
+- **Loot feed and junk items**: their sample lines go away when you lock the elements again (they stayed on screen until the next loot).
+- **Worn-out gear**: the game's armour figure showing your broken pieces is hidden with the other replaced Blizzard frames (the data bar and the repair prompt already tell it).
+
+**Removed**
+- The **Totems** element and its options (your totems, timer, empty slots, icon size and spacing, hiding the game's totem buttons). The game's own totem buttons show again. The Shaman call totem bar stays.
 
 ## October 19, 2026 (0.9.88)
 **Fixed**

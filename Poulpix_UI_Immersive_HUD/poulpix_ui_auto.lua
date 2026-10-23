@@ -47,6 +47,7 @@ local function PatternOf(fmt)
     return "^" .. p .. "$"
 end
 local feed
+local feedShown = false
 local rows, live = {}, {}
 local MAX_ROWS = 8
 local session = { start = 0, money = 0, items = 0 }
@@ -80,7 +81,7 @@ local function LayoutFeed()
     if not feed then return end
     local c = C()
     ShowIf(feed, c.lootFeed and true or false)
-    if not c.lootFeed then ns.SetContent(feed, false) return end
+    if not c.lootFeed then feedShown = false ns.SetContent(feed, false) return end
     local now = GetTime()
     local hold = c.lootTime or 6
     for i = #live, 1, -1 do
@@ -119,6 +120,7 @@ local function LayoutFeed()
         end
     end
     feed:SetSize(w, math.max(18, n * 20 - 2))
+    feedShown = n > 0
     ns.SetContent(feed, n > 0)
 end
 local function AddFeed(key, icon, label, count, countFmt)
@@ -624,7 +626,7 @@ function ns.Auto_Init()
         if not ns.db then return end
         if acc >= 0.1 then
             acc = 0
-            if C().lootFeed and (#live > 0 or ns.Preview()) then pcall(LayoutFeed) end
+            if C().lootFeed and (#live > 0 or ns.Preview() or feedShown) then pcall(LayoutFeed) end
         end
         if slow >= 1 then
             slow = 0

@@ -87,8 +87,9 @@ SK.Recolor = nil
 function H.QueueWalks(f, label, keepArt, noTree, now)
     local name = Call(f, "GetName") or "?"
     local tree
-    if not noTree and SK.DressTree and not InCombatLockdown() then
-        tree = H.Job("tree", f, label .. " tree " .. name, { inc = true }, SK.DressTree, f, 1, keepArt)
+    local guarded = Call(f, "IsProtected") and true or false
+    if not noTree and SK.DressTree and not (InCombatLockdown() and guarded) then
+        tree = H.Job("tree", f, label .. " tree " .. name, { inc = true, combatOK = not guarded }, SK.DressTree, f, 1, keepArt)
     end
     local gold = not H.NO_GOLD[name]
     local text = H.Job("recolor", f, label .. " text " .. name, { inc = true, gold = gold, green = gold and name == "CommunitiesFrame", combatOK = true },

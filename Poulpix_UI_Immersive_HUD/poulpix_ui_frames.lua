@@ -2814,7 +2814,7 @@ function ns.Frames_BlizzardAuras()
     end
 end
 ns.LAYER_KEYS = { "location", "pbuffs", "pdebuffs", "target", "tcast", "tbuffs", "tdebuffs", "focus", "fcast", "fbuffs", "fdebuffs", "player", "icon", "power", "cast", "minimap", "clock", "quest", "prompts",
-    "xp", "bar1", "bar2", "bar3", "bar4", "bar5", "bar6", "bar7", "bar8", "stance", "pet", "micro", "bags", "totems", "groupBadge", "tot", "petHp", "combo",
+    "xp", "bar1", "bar2", "bar3", "bar4", "bar5", "bar6", "bar7", "bar8", "stance", "pet", "micro", "bags", "groupBadge", "tot", "petHp", "combo",
     "threat", "swing", "callTotems", "flight", "lootFeed", "junk", "fps", "kick", "dataBar", "selfText", "alerts", "mobility", "crosshair" }
 ns.LAYER_COUNT = 8
 local LAYER_STEP = 100
@@ -2965,7 +2965,40 @@ local function BuildGrid()
 end
 local function LockButton()
     if ns.lockButton then return ns.lockButton end
-    local b = MakeButton("PoulpixUILockButton", UIParent, "Lock (save positions)", 220, 28)
+    local b = CreateFrame("Button", "PoulpixUILockButton", UIParent)
+    b:SetSize(220, 28)
+    local bg = b:CreateTexture(nil, "BACKGROUND")
+    bg:SetTexture(WHITE)
+    bg:SetAllPoints(b)
+    bg:SetVertexColor(0.055, 0.052, 0.048, 0.95)
+    local edges = {}
+    for i = 1, 4 do
+        local e = b:CreateTexture(nil, "BORDER")
+        e:SetTexture(WHITE)
+        edges[i] = e
+    end
+    edges[1]:SetPoint("TOPLEFT", b, "TOPLEFT"); edges[1]:SetPoint("TOPRIGHT", b, "TOPRIGHT"); edges[1]:SetHeight(1)
+    edges[2]:SetPoint("BOTTOMLEFT", b, "BOTTOMLEFT"); edges[2]:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT"); edges[2]:SetHeight(1)
+    edges[3]:SetPoint("TOPLEFT", b, "TOPLEFT"); edges[3]:SetPoint("BOTTOMLEFT", b, "BOTTOMLEFT"); edges[3]:SetWidth(1)
+    edges[4]:SetPoint("TOPRIGHT", b, "TOPRIGHT"); edges[4]:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT"); edges[4]:SetWidth(1)
+    local hl = b:CreateTexture(nil, "HIGHLIGHT")
+    hl:SetTexture(WHITE)
+    hl:SetAllPoints(b)
+    local fs = MakeText(b, 13, "CENTER")
+    fs:SetPoint("CENTER", b, "CENTER", 0, 0)
+    b:SetFontString(fs)
+    local function Paint()
+        local r, g, bl = 0.95, 0.85, 0.55
+        if ns.MenuAccent then
+            local r1, g1, b1 = ns.MenuAccent()
+            if type(r1) == "number" then r, g, bl = r1, g1, b1 end
+        end
+        for _, e in ipairs(edges) do e:SetVertexColor(r, g, bl, 0.6) end
+        hl:SetVertexColor(r, g, bl, 0.12)
+        fs:SetTextColor(0.95, 0.93, 0.86)
+    end
+    Paint()
+    b:SetScript("OnShow", Paint)
     b:SetFrameStrata("FULLSCREEN_DIALOG")
     b:SetPoint("TOP", UIParent, "TOP", 0, -120)
     b:SetScript("OnClick", function() ns.Lock() end)
@@ -2993,6 +3026,7 @@ function ns.Frames_SetUnlocked(unlocked)
     if ns.Focus_Update then pcall(ns.Focus_Update) end
     if ns.ActionBars_UpdateAll then ns.ActionBars_UpdateAll() end
     if ns.World_OnUnlock then pcall(ns.World_OnUnlock, unlocked) end
+    if ns.Auto_Apply then pcall(ns.Auto_Apply) end
     ns.Frames_UpdateMasks()
     if not unlocked then
         for key, f in pairs(blocks) do SaveBlockPosition(f) end

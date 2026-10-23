@@ -292,6 +292,7 @@ function ns.Profiles_Load()
         if next(root.debugOff) == nil then root.debugOff = nil end
     end
     local key = CharKey()
+    if key then ns.charIsNew = root.chars[key] == nil end
     local name = key and root.chars[key]
     if not name or not root.profiles[name] then name = DEFAULT end
     ns.Profiles_Select(name)
@@ -310,6 +311,7 @@ function ns.Profiles_CheckCharacter()
     local key = CharKey()
     if not key then return end
     local name = ns.root.chars[key]
+    if ns.charIsNew == nil then ns.charIsNew = name == nil end
     if name and name ~= ns.profileName and ns.root.profiles[name] then
         ns.Profiles_Select(name)
     else

@@ -349,17 +349,31 @@ function ns.WeaponEnchants()
     return out
 end
 local restrictedAt = -1
+local lastMode
+local function NoteMode(on, why)
+    if lastMode == why or not ns.root then return end
+    lastMode = why
+    ns.root.diag = ns.root.diag or {}
+    local log = ns.root.diag.AuraMode or {}
+    ns.root.diag.AuraMode = log
+    local when = ""
+    pcall(function() when = date("%H:%M:%S") end)
+    log[#log + 1] = when .. " " .. (on and "game container" or "addon") .. " (" .. why .. ", combat="
+        .. tostring(InCombatLockdown() and true or false) .. ")"
+    while #log > 20 do table.remove(log, 1) end
+end
 function ns.AurasRestricted()
     local now = GetTime()
     local yes = false
     pcall(function()
         if C_Secrets and C_Secrets.ShouldAurasBeSecret and C_Secrets.ShouldAurasBeSecret() == true then yes = true end
     end)
-    if yes then restrictedAt = now return true end
+    if yes then restrictedAt = now NoteMode(true, "aura data secret") return true end
     if now == restrictedAt then return true end
     if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
-        if pcall(C_UnitAuras.GetAuraDataByIndex, "player", 1, "HELPFUL") then return false end
+        if pcall(C_UnitAuras.GetAuraDataByIndex, "player", 1, "HELPFUL") then NoteMode(false, "aura data readable") return false end
         restrictedAt = now
+        NoteMode(true, "aura read refused")
         return true
     end
     return false
@@ -373,10 +387,46 @@ local function EngineAvailable()
     return true
 end
 local engineRows = setmetatable({}, { __mode = "k" })
+local ENGINE_NAME = { "SetSpellName", "SetNameText", "SetAuraNameText", "SetSpellNameText", "SetAuraName", "SetNameFontString" }
+local ENGINE_BAR = { "SetDurationStatusBar", "SetDurationBar", "SetTimerStatusBar", "SetTimerBar", "SetDurationTimerBar" }
+local engineProbed = false
+local function EngineBindWidget(button, list, widget)
+    for _, m in ipairs(list) do
+        local fn = button[m]
+        if type(fn) == "function" then
+            if pcall(fn, button, widget, {}) or pcall(fn, button, widget) then return m end
+        end
+    end
+    return nil
+end
+local function EngineProbe(button, nameAPI, barAPI)
+    if engineProbed or not ns.root then return end
+    engineProbed = true
+    local found = {}
+    pcall(function()
+        local seen = {}
+        local function Scan(t)
+            if type(t) ~= "table" then return end
+            for k, v in pairs(t) do
+                if type(k) == "string" and type(v) == "function" and not seen[k] and k:find("^Set") and (k:find("Aura") or k:find("Duration") or k:find("Name") or k:find("Text") or k:find("Bar") or k:find("Timer") or k:find("Count")) then
+                    seen[k] = true
+                    found[#found + 1] = k
+                end
+            end
+        end
+        Scan(button)
+        local mt = getmetatable(button)
+        Scan(mt and mt.__index)
+        table.sort(found)
+    end)
+    ns.root.diag = ns.root.diag or {}
+    ns.root.diag.AuraEngine = { methods = table.concat(found, ", "), name = nameAPI or "none", bar = barAPI or "none" }
+end
 local function LayoutEngineCell(row, button, d)
     local size = row.engineSize or 30
     local bars = row.engineStyle == "bars"
-    local w = bars and (size + 5 + (row.engineBarW or 110)) or size
+    local barW = row.engineBarW or 110
+    local w = bars and (size + 5 + barW) or size
     if d.w ~= w or d.h ~= size then
         if pcall(button.SetSize, button, w, size) then d.w, d.h = w, size end
     end
@@ -390,17 +440,33 @@ local function LayoutEngineCell(row, button, d)
             d.iconHost:SetPoint("LEFT", button, "LEFT", 0, 0)
         end
         d.timer:ClearAllPoints()
+        d.name:ClearAllPoints()
+        d.bar:ClearAllPoints()
         if bars then
-            ns.SetFont(d.timer, math.max(9, math.floor(size * 0.42)), "OUTLINE")
+            ns.SetFont(d.timer, 10, "OUTLINE")
+            ns.SetFont(d.name, 10, "OUTLINE")
+            d.bar:SetWidth(barW)
             if right then
-                d.timer:SetPoint("RIGHT", d.iconHost, "LEFT", -5, 0)
-                d.timer:SetJustifyH("RIGHT")
-            else
-                d.timer:SetPoint("LEFT", d.iconHost, "RIGHT", 5, 0)
+                d.bar:SetPoint("BOTTOMRIGHT", d.iconHost, "BOTTOMLEFT", -5, 1)
+                d.name:SetPoint("TOPRIGHT", d.iconHost, "TOPLEFT", -5, 0)
+                d.name:SetPoint("LEFT", d.bar, "LEFT", 30, 0)
+                d.name:SetJustifyH("RIGHT")
+                d.timer:SetPoint("TOPLEFT", d.bar, "TOPLEFT", 0, size - 3)
                 d.timer:SetJustifyH("LEFT")
+            else
+                d.bar:SetPoint("BOTTOMLEFT", d.iconHost, "BOTTOMRIGHT", 5, 1)
+                d.name:SetPoint("TOPLEFT", d.iconHost, "TOPRIGHT", 5, 0)
+                d.name:SetPoint("RIGHT", d.bar, "RIGHT", -30, 0)
+                d.name:SetJustifyH("LEFT")
+                d.timer:SetPoint("TOPRIGHT", d.bar, "TOPRIGHT", 0, size - 3)
+                d.timer:SetJustifyH("RIGHT")
             end
+            d.bar:Show()
+            if d.hasName then d.name:Show() else d.name:Hide() end
             d.timer:Show()
         else
+            d.bar:Hide()
+            d.name:Hide()
             ns.SetFont(d.timer, math.max(8, math.floor(size * 0.45)), "OUTLINE")
             d.timer:SetPoint("CENTER", d.iconHost, "CENTER", 0, 0)
             d.timer:SetJustifyH("CENTER")
@@ -408,6 +474,162 @@ local function LayoutEngineCell(row, button, d)
         end
     end)
     d.style = row.engineStyle
+end
+local function NewCellBg(parent)
+    local host = CreateFrame("Frame", nil, parent)
+    host:EnableMouse(false)
+    local bg = { host = host }
+    if ns.Brush_Plate then bg.plate = ns.Brush_Plate(host, "BACKGROUND", -8) end
+    bg.flat = host:CreateTexture(nil, "BACKGROUND", nil, -8)
+    bg.flat:SetTexture(WHITE)
+    bg.flat:SetAllPoints(host)
+    bg.flat:Hide()
+    return bg
+end
+local function PaintCellBg(bg, key, on)
+    if not bg then return end
+    local db = ns.db
+    local show = on and db and db.show.masks and true or false
+    local model, off
+    if show and ns.BrushFor then
+        local m, _, o = ns.BrushFor(key)
+        model, off = m, o
+    end
+    if not show or off then
+        if bg.plate and ns.Brush_Hide then ns.Brush_Hide(bg.plate) end
+        bg.flat:Hide()
+        bg.host:Hide()
+        return
+    end
+    bg.host:Show()
+    local c = (db.colors and db.colors.mask) or { 0, 0, 0, 1 }
+    local a = (c[4] or 1) * (db.global.maskAlpha or 0.6)
+    if model and bg.plate and ns.Brush_Layout then
+        bg.flat:Hide()
+        ns.Brush_Layout(bg.plate, bg.host, model, c[1], c[2], c[3], a, 6)
+    else
+        if bg.plate and ns.Brush_Hide then ns.Brush_Hide(bg.plate) end
+        bg.flat:SetVertexColor(c[1], c[2], c[3], a * 0.6)
+        bg.flat:Show()
+    end
+end
+local function BlockKey(row)
+    if rawget(row, "isPlate") then return nil end
+    local owner = rawget(row, "owner")
+    return type(owner) == "table" and rawget(owner, "key") or nil
+end
+local function CellFilled(d)
+    local tex
+    local ok = pcall(function() tex = d.icon:GetTexture() end)
+    if not ok then return nil end
+    local sok, sec = pcall(function() return type(issecretvalue) == "function" and issecretvalue(tex) == true end)
+    if sok and sec then return true end
+    return tex ~= nil and tex ~= "" and tex ~= 0
+end
+local function CountRet(ok, token, ...)
+    if not ok then return nil end
+    return select("#", ...), token
+end
+local function ApiCount(unit, filter)
+    if not unit or unit == "none" then return nil end
+    if C_UnitAuras and C_UnitAuras.GetUnitAuraInstanceIDs then
+        local ok, list = pcall(C_UnitAuras.GetUnitAuraInstanceIDs, unit, filter)
+        if ok and type(list) == "table" then
+            local n
+            pcall(function() n = #list end)
+            if type(n) == "number" then return n, "ids" end
+        end
+    end
+    for _, src in ipairs({ { C_UnitAuras and C_UnitAuras.GetAuraSlots, "slots" }, { rawget(_G, "UnitAuraSlots"), "unitslots" } }) do
+        local fn = src[1]
+        if type(fn) == "function" then
+            local total, token, guard = 0, nil, 0
+            local n
+            n, token = CountRet(pcall(fn, unit, filter))
+            if n then
+                total = n
+                while token ~= nil and guard < 8 do
+                    guard = guard + 1
+                    local more
+                    more, token = CountRet(pcall(fn, unit, filter, nil, token))
+                    if not more then break end
+                    total = total + more
+                end
+                return total, src[2]
+            end
+        end
+    end
+    return nil
+end
+local function EngineBox(row)
+    local p = rawget(row, "enginePlace")
+    if not p then return 0, nil end
+    local api, src = ApiCount(rawget(row, "engineUnit"), rawget(row, "engineFilter") or "HELPFUL")
+    local cells, shownN, filledN, errs, guess = 0, 0, 0, 0, 0
+    for b, d in pairs(row.engineCells or {}) do
+        cells = cells + 1
+        local shown
+        local ok = pcall(function() shown = b:IsShown() and true or false end)
+        if not ok then errs = errs + 1 end
+        if shown then shownN = shownN + 1 end
+        local filled = CellFilled(d)
+        if filled == nil then errs = errs + 1 end
+        if filled then filledN = filledN + 1 end
+        if shown == true and filled ~= false then guess = guess + 1 end
+    end
+    local bySize
+    if p.perRow <= 1 and rawget(row, "engine") then
+        pcall(function()
+            local h = row.engine:GetHeight()
+            if type(h) == "number" and not (type(issecretvalue) == "function" and issecretvalue(h)) and h > 2 then
+                bySize = math.floor((h + p.gap) / p.vstep + 0.5)
+            end
+        end)
+    end
+    local k
+    if api then
+        k = p.n + api
+        src = src or "api"
+    elseif bySize and bySize < p.maxN then
+        k, src = p.n + bySize, "size"
+    elseif errs == 0 then
+        k, src = p.n + guess, "cells"
+    else
+        k, src = p.maxN, "unknown"
+    end
+    k = math.min(k, p.maxN)
+    if ns.root and rawget(row, "owner") and rawget(row.owner, "key") then
+        ns.root.diag = ns.root.diag or {}
+        local fit = ns.root.diag.AuraFit or {}
+        ns.root.diag.AuraFit = fit
+        local t = 0
+        pcall(function() t = GetTime() end)
+        fit[row.owner.key] = string.format("%.0f source=%s api=%s cells=%d shown=%d filled=%d errors=%d weapons=%d bySize=%s counted=%d max=%d",
+            t, tostring(src), tostring(api), cells, shownN, filledN, errs, p.n, tostring(bySize), k, p.maxN)
+    end
+    if BlockKey(row) then return 0, nil end
+    if k <= 0 then return 0, nil end
+    local per = math.min(k, p.perRow)
+    local lines = math.ceil(k / p.perRow)
+    local W, Hh = per * (p.itemW + p.gap) - p.gap, lines * p.step - p.gap
+    local x0 = (p.align == "right") and (p.barW / 2 - W) or ((p.align == "left") and (-p.barW / 2) or (-W / 2))
+    return k, { x0, x0 + W, p.above and 0 or -Hh, p.above and Hh or 0 }
+end
+local refitQueued = setmetatable({}, { __mode = "k" })
+local function EngineRefit(row)
+    refitQueued[row] = nil
+    if not rawget(row, "engineOn") or rawget(row, "isPlate") then return end
+    local owner = rawget(row, "owner")
+    if type(owner) ~= "table" or not rawget(owner, "key") then return end
+    local k, box = EngineBox(row)
+    row.used = box
+    if ns.Frames_SetFit then pcall(ns.Frames_SetFit, owner, row.anchor, box) end
+    if ns.SetContent then pcall(ns.SetContent, owner, k > 0) end
+end
+local function QueueRefit(row)
+    if refitQueued[row] then return end
+    refitQueued[row] = true
+    if C_Timer and C_Timer.After then C_Timer.After(0, function() EngineRefit(row) end) else EngineRefit(row) end
 end
 local function InitEngineCell(button, row)
     pcall(function()
@@ -420,6 +642,7 @@ local function InitEngineCell(button, row)
         edge:SetPoint("BOTTOMRIGHT", d.iconHost, "BOTTOMRIGHT", 1, -1)
         if row.engineFilter == "HARMFUL" then edge:SetVertexColor(0.8, 0.1, 0.1, 1) else edge:SetVertexColor(0, 0, 0, 0.85) end
         local icon = d.iconHost:CreateTexture(nil, "ARTWORK")
+        d.icon = icon
         icon:SetAllPoints(d.iconHost)
         icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
         local cd = CreateFrame("Cooldown", nil, d.iconHost, "CooldownFrameTemplate")
@@ -435,6 +658,27 @@ local function InitEngineCell(button, row)
         d.count = ns.MakeText(top, 9, "RIGHT")
         d.count:SetPoint("BOTTOMRIGHT", d.iconHost, "BOTTOMRIGHT", 1, -1)
         d.timer = ns.MakeText(top, 10, "CENTER")
+        d.bg = NewCellBg(button)
+        d.bg.host:SetAllPoints(button)
+        pcall(function() d.bg.host:SetFrameLevel(math.max(0, d.iconHost:GetFrameLevel() - 1)) end)
+        PaintCellBg(d.bg, BlockKey(row), BlockKey(row) ~= nil)
+        d.name = ns.MakeText(top, 10, "LEFT")
+        if d.name.SetWordWrap then pcall(d.name.SetWordWrap, d.name, false) end
+        d.bar = CreateFrame("StatusBar", nil, button)
+        d.bar:SetStatusBarTexture(WHITE)
+        d.bar:SetMinMaxValues(0, 1)
+        d.bar:SetValue(1)
+        d.bar:SetHeight(3)
+        d.bar:EnableMouse(false)
+        local bbg = d.bar:CreateTexture(nil, "BACKGROUND")
+        bbg:SetTexture(WHITE)
+        bbg:SetAllPoints(d.bar)
+        bbg:SetVertexColor(0, 0, 0, 0.6)
+        if row.engineFilter == "HARMFUL" then d.bar:SetStatusBarColor(0.8, 0.1, 0.1, 0.9) else d.bar:SetStatusBarColor(0.95, 0.85, 0.55, 0.9) end
+        local nameAPI = EngineBindWidget(button, ENGINE_NAME, d.name)
+        local barAPI = EngineBindWidget(button, ENGINE_BAR, d.bar)
+        d.hasName = nameAPI and true or false
+        EngineProbe(button, nameAPI, barAPI)
         LayoutEngineCell(row, button, d)
         if row.engineCancel then
             if button.SetCancelAuraButtons then pcall(button.SetCancelAuraButtons, button, "RightButtonUp") end
@@ -448,6 +692,10 @@ local function InitEngineCell(button, row)
         if button.SetDurationText then pcall(button.SetDurationText, button, d.timer, {}) end
         row.engineCells = row.engineCells or {}
         row.engineCells[button] = d
+        if button.HookScript then
+            button:HookScript("OnShow", function() QueueRefit(row) end)
+            button:HookScript("OnHide", function() QueueRefit(row) end)
+        end
     end)
 end
 local function EngineCall(c, new, old, ...)
@@ -482,11 +730,49 @@ local function EngineContainer(row, unit, filter, size, gap, maxN, style, cfg, p
         if not ok or not f then engineFailed = true return nil end
         f:SetSize(1, 1)
         local itemW = (style == "bars") and (size + 5 + row.engineBarW) or size
-        local okG = pcall(f.AddAuraGroup, f, "all", filter, {
-            maxFrameCount = maxN,
-            initializeFrame = function(button) InitEngineCell(button, row) end,
-            layout = { elementWidth = itemW, elementHeight = size, elementSpacing = gap, lineSpacing = gap },
-        })
+        local function Group()
+            local g = {
+                maxFrameCount = maxN,
+                initializeFrame = function(button) InitEngineCell(button, row) end,
+                layout = { elementWidth = itemW, elementHeight = size, elementSpacing = gap, lineSpacing = gap },
+            }
+            return g
+        end
+        local okG = pcall(f.AddAuraGroup, f, "all", filter, Group())
+        if okG and unit == "player" then
+            local note = "no sort method in this client"
+            local E = rawget(_G, "Enum") and Enum.AuraContainerSortMethod
+            if type(E) == "table" then
+                local keys = {}
+                for k in pairs(E) do keys[#keys + 1] = tostring(k) end
+                table.sort(keys)
+                local pick
+                for _, want in ipairs({ "expiration", "remaining", "duration", "time" }) do
+                    if not pick then
+                        local asc, any
+                        for _, k in ipairs(keys) do
+                            local lk = k:lower()
+                            if lk:find(want, 1, true) and not lk:find("desc", 1, true) then
+                                any = any or k
+                                if lk:find("asc", 1, true) then asc = asc or k end
+                            end
+                        end
+                        pick = asc or any
+                    end
+                end
+                if pick then
+                    local ok1, e1 = pcall(f.SetAuraGroupSortMethod, f, "all", E[pick])
+                    note = pick .. " " .. (ok1 and "set" or ("refused: " .. tostring(e1)))
+                else
+                    note = "no time method"
+                end
+                note = note .. " (methods: " .. table.concat(keys, ", ") .. ")"
+            end
+            if ns.root then
+                ns.root.diag = ns.root.diag or {}
+                ns.root.diag.AuraSort = note
+            end
+        end
         if not okG then
             engineFailed = true
             pcall(f.Hide, f)
@@ -494,6 +780,26 @@ local function EngineContainer(row, unit, filter, size, gap, maxN, style, cfg, p
         end
         row.engine = f
         row.engineMax = maxN
+        if ns.root then
+            pcall(function()
+                local names, seen = {}, {}
+                local function Scan(t)
+                    if type(t) ~= "table" then return end
+                    for k, v in pairs(t) do
+                        if type(k) == "string" and type(v) == "function" and not seen[k] and (k:find("Sort") or k:find("Order") or k:find("Aura") or k:find("Flow")) then
+                            seen[k] = true
+                            names[#names + 1] = k
+                        end
+                    end
+                end
+                local okA = pcall(Scan, f)
+                local okB = pcall(function() local mt = getmetatable(f); Scan(mt and mt.__index) end)
+                if not okA and not okB then names[1] = "(the game does not let addons list them)" end
+                table.sort(names)
+                ns.root.diag = ns.root.diag or {}
+                ns.root.diag.AuraContainer = table.concat(names, ", ")
+            end)
+        end
         row.engineItemW = itemW
         engineRows[row] = true
         c = f
@@ -510,14 +816,17 @@ local function PlaceEngine(row, cfg, above, n, size, gap, perRow, maxN, style)
     local itemW = (style == "bars") and (size + 5 + (cfg.barWidth or 110)) or size
     local step = itemW + gap
     local v = above and "BOTTOM" or "TOP"
+    local stacked = perRow <= 1
+    local dx = stacked and 0 or n * step
+    local dy = stacked and ((above and 1 or -1) * n * (size + gap)) or 0
     pcall(function()
         c:ClearAllPoints()
         if align == "left" then
-            c:SetPoint(v .. "LEFT", row.anchor, "CENTER", -barW / 2 + n * step, 0)
+            c:SetPoint(v .. "LEFT", row.anchor, "CENTER", -barW / 2 + dx, dy)
         elseif right then
-            c:SetPoint(v .. "RIGHT", row.anchor, "CENTER", barW / 2 - n * step, 0)
+            c:SetPoint(v .. "RIGHT", row.anchor, "CENTER", barW / 2 - dx, dy)
         else
-            c:SetPoint(v, row.anchor, "CENTER", 0, 0)
+            c:SetPoint(v, row.anchor, "CENTER", 0, dy)
         end
     end)
     local ia = v .. (right and "RIGHT" or "LEFT")
@@ -528,7 +837,7 @@ local function PlaceEngine(row, cfg, above, n, size, gap, perRow, maxN, style)
             right and FD.Left or FD.Right, above and FD.Up or FD.Down)
     end
     local lineW = perRow * itemW + (perRow - 1) * gap + 0.4
-    EngineCall(c, "SetFlowLayoutMaximumLineSize", "SetAuraLayoutRowWidth", math.max(step, lineW - n * step))
+    EngineCall(c, "SetFlowLayoutMaximumLineSize", "SetAuraLayoutRowWidth", stacked and step or math.max(step, lineW - n * step))
     local barWidth = cfg.barWidth or 110
     if row.engineSize ~= size or row.engineMax ~= maxN or row.engineStyle ~= style or row.engineRight ~= right
         or row.engineBarW ~= barWidth or row.engineItemW ~= itemW then
@@ -544,6 +853,19 @@ local function PlaceEngine(row, cfg, above, n, size, gap, perRow, maxN, style)
     end
     pcall(c.SetAuraGroupMaxFrameCount, c, "all", math.max(0, maxN - n))
     c:Show()
+    local key = BlockKey(row)
+    for _, d in pairs(row.engineCells or {}) do PaintCellBg(d.bg, key, key ~= nil) end
+end
+do
+    local tick, acc = CreateFrame("Frame"), 0
+    tick:SetScript("OnUpdate", function(_, dt)
+        acc = acc + dt
+        if acc < 0.5 then return end
+        acc = 0
+        for row in pairs(engineRows) do
+            if rawget(row, "engineOn") and not rawget(row, "isPlate") then EngineRefit(row) end
+        end
+    end)
 end
 do
     local ev = CreateFrame("Frame")
@@ -661,19 +983,41 @@ local function FillRow(row, unit, filter, enabled)
     end
     row.engineOn = engine
     if enabled then
-        local full = false
+        local list = {}
         for i = 1, engine and 0 or 40 do
             local ok, icon, count, duration, expires, dtype, auraID, name = pcall(GetAura, unit, i, filter)
             if not ok or (not IsSecret(icon) and not icon) then break end
             if IsSecret(dtype) then dtype = nil end
             if IsSecret(name) then name = nil end
             if IsSecret(auraID) then auraID = nil end
-            if Put(i, icon, count, duration, expires, dtype, auraID, name) then full = true break end
+            list[#list + 1] = { i, icon, count, duration, expires, dtype, auraID, name, nil, #list + 1 }
         end
-        if not full and unit == "player" and filter == "HELPFUL" and not ns.state.sim and ns.WeaponEnchants then
+        if unit == "player" and filter == "HELPFUL" and not ns.state.sim and ns.WeaponEnchants then
             for _, w in ipairs(ns.WeaponEnchants()) do
-                if Put(nil, w.icon, w.charges, w.duration, w.expires, nil, nil, w.name, w.slot) then break end
+                list[#list + 1] = { nil, w.icon, w.charges, w.duration, w.expires, nil, nil, w.name, w.slot, #list + 1 }
             end
+        end
+        if unit == "player" and #list > 1 then
+            local now = GetTime()
+            for _, e in ipairs(list) do
+                local left = math.huge
+                pcall(function()
+                    local d, x = e[4], e[5]
+                    if not IsSecret(d) and not IsSecret(x) and type(d) == "number" and d > 0 and type(x) == "number" and x > 0 then
+                        left = x - now
+                    end
+                end)
+                e.left = left
+            end
+            table.sort(list, function(p, q)
+                local pw, qw = p[9] ~= nil, q[9] ~= nil
+                if pw ~= qw then return pw end
+                if p.left ~= q.left then return p.left < q.left end
+                return p[10] < q[10]
+            end)
+        end
+        for _, e in ipairs(list) do
+            if Put(e[1], e[2], e[3], e[4], e[5], e[6], e[7], e[8], e[9]) then break end
         end
     end
     for i = n + 1, #row do
@@ -725,15 +1069,33 @@ local function FillRow(row, unit, filter, enabled)
             if y1 > box[4] then box[4] = y1 end
         end
     end
+    local bkey = BlockKey(row)
+    for i = 1, #row do
+        local a = row[i]
+        if engine and bkey and i <= n then
+            if not rawget(a, "cbg") then a.cbg = NewCellBg(a) end
+            a.cbg.host:ClearAllPoints()
+            if style == "bars" and cfg.align == "right" then
+                a.cbg.host:SetPoint("TOPRIGHT", a, "TOPRIGHT", 0, 0)
+            else
+                a.cbg.host:SetPoint("TOPLEFT", a, "TOPLEFT", 0, 0)
+            end
+            a.cbg.host:SetSize(itemW, size)
+            PaintCellBg(a.cbg, bkey, true)
+        elseif rawget(a, "cbg") then
+            PaintCellBg(a.cbg, nil, false)
+        end
+    end
     if engine then
         PlaceEngine(row, cfg, above, n, size, gap, perRow, maxN, style)
         row.engineWeapons = n
-        local lines = math.ceil(maxN / perRow)
-        local W, Hh = perRow * (itemW + gap) - gap, lines * step - gap
-        local x0 = (cfg.align == "right") and (barW / 2 - W) or ((cfg.align == "left") and (-barW / 2) or (-W / 2))
-        box = { x0, x0 + W, above and 0 or -Hh, above and Hh or 0 }
+        row.enginePlace = { n = n, maxN = maxN, perRow = perRow, itemW = itemW, gap = gap, step = step, above = above,
+            align = cfg.align, barW = barW, vstep = size + gap }
+        local k
+        k, box = EngineBox(row)
         row.used = box
-        return math.max(n, 1)
+        if C_Timer and C_Timer.After then C_Timer.After(0.1, function() EngineRefit(row) end) end
+        return k
     end
     row.used = box
     return n

@@ -228,7 +228,7 @@ ns.Skin_QueueRecolor = QueueRecolor
 local function Window(f, opts)
     if not Usable(f) then return end
     if dressed[f] then return end
-    if InCombatLockdown() then SK.pending = true return end
+    if InCombatLockdown() and Call(f, "IsProtected") then SK.pending = true return end
     local first = not dressed[f]
     opts = opts or dressed[f] or {}
     dressed[f] = opts
@@ -236,7 +236,8 @@ local function Window(f, opts)
     pcall(MakeMovable, f)
     if first and f.HookScript then
         f:HookScript("OnShow", function(self)
-            if ThemeOn("win") and not InCombatLockdown() then
+            if ThemeOn("win") and InCombatLockdown() and Call(self, "IsProtected") then SK.pending = true end
+            if ThemeOn("win") and not (InCombatLockdown() and Call(self, "IsProtected")) then
                 H.reshow = true
                 H.Time("show, dress " .. (Call(self, "GetName") or "?"), DressWindow, self, opts)
                 H.reshow = false

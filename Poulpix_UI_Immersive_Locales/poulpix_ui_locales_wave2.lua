@@ -112,25 +112,6 @@ W("Show the pet health bar", "Afficher la barre de vie du familier", "Begleiter-
     "显示宠物生命条", "소환수 체력바 표시", "Показывать шкалу здоровья питомца", "ペットのHPバーを表示", "إظهار شريط صحة الحيوان الأليف")
 W("Show the pet name", "Afficher le nom du familier", "Namen des Begleiters anzeigen", "Mostrar el nombre de la mascota", "显示宠物名称",
     "소환수 이름 표시", "Показывать имя питомца", "ペットの名前を表示", "إظهار اسم الحيوان الأليف")
-W("Totems", "Totems", "Totems", "Tótems", "图腾", "토템", "Тотемы", "トーテム", "الطواطم")
-A("enUS", { ["Totems note"] = "Shaman only. The game does not let an addon end a totem with a click: use the game's own totem buttons for that, and hide them here only if you do not need them." })
-A("frFR", { ["Totems note"] = "Chaman uniquement. Le jeu ne permet pas à un addon de détruire un totem d'un clic : utilise pour cela les boutons de totems du jeu, et ne les masque ici que si tu n'en as pas besoin." })
-A("deDE", { ["Totems note"] = "Nur Schamanen. Das Spiel erlaubt einem Addon nicht, ein Totem per Klick zu beenden: Nutze dafür die Totem-Tasten des Spiels und blende sie hier nur aus, wenn du sie nicht brauchst." })
-A("esES", { ["Totems note"] = "Solo chamanes. El juego no permite que un addon termine un tótem con un clic: usa para eso los botones de tótems del juego y ocúltalos aquí solo si no los necesitas." })
-A("zhCN", { ["Totems note"] = "仅限萨满。游戏不允许插件通过点击结束图腾：请使用游戏自带的图腾按钮，只有在不需要时才在此隐藏它们。" })
-A("koKR", { ["Totems note"] = "주술사 전용입니다. 게임은 애드온이 클릭으로 토템을 해제하는 것을 허용하지 않습니다. 그럴 때는 게임 기본 토템 버튼을 쓰고, 필요 없을 때만 여기서 숨기세요." })
-A("ruRU", { ["Totems note"] = "Только для шамана. Игра не позволяет аддону убирать тотем щелчком: для этого используйте стандартные кнопки тотемов и скрывайте их здесь, только если они вам не нужны." })
-A("jaJP", { ["Totems note"] = "シャーマン専用です。ゲームはアドオンがクリックでトーテムを消すことを許可していません。その場合はゲーム標準のトーテムボタンを使い、不要なときだけここで隠してください。" })
-A("arAR", { ["Totems note"] = "للشامان فقط. لا تسمح اللعبة للإضافات بإنهاء طوطم بنقرة: استخدم أزرار الطواطم الأصلية لذلك، ولا تُخفها هنا إلا إذا لم تحتجها." })
-W("Show your totems", "Afficher tes totems", "Deine Totems anzeigen", "Mostrar tus tótems", "显示你的图腾", "내 토템 표시", "Показывать ваши тотемы", "トーテムを表示", "إظهار طواطمك")
-W("Timer on the totem icons", "Minuteur sur les icônes de totems", "Timer auf den Totem-Symbolen", "Temporizador en los iconos de tótems",
-    "在图腾图标上显示计时", "토템 아이콘에 타이머 표시", "Таймер на значках тотемов", "トーテムのアイコンにタイマーを表示", "مؤقت على أيقونات الطواطم")
-W("Show empty totem slots", "Afficher les emplacements de totem vides", "Leere Totem-Plätze anzeigen", "Mostrar los huecos de tótem vacíos",
-    "显示空的图腾栏位", "빈 토템 칸 표시", "Показывать пустые ячейки тотемов", "空のトーテム枠を表示", "إظهار خانات الطواطم الفارغة")
-W("Totem icon size", "Taille des icônes de totems", "Größe der Totem-Symbole", "Tamaño de los iconos de tótems", "图腾图标大小", "토템 아이콘 크기",
-    "Размер значков тотемов", "トーテムアイコンの大きさ", "حجم أيقونات الطواطم")
-W("Totem icon spacing", "Espacement des icônes de totems", "Abstand der Totem-Symbole", "Separación de los iconos de tótems", "图腾图标间距",
-    "토템 아이콘 간격", "Расстояние между значками тотемов", "トーテムアイコンの間隔", "المسافة بين أيقونات الطواطم")
 W("Raid group badge", "Pastille de groupe de raid", "Raidgruppen-Abzeichen", "Insignia de grupo de banda", "团队小队标记", "공격대 파티 표시", "Значок группы рейда",
     "レイドグループ表示", "شارة مجموعة الغارة")
 W("Show my raid group number", "Afficher mon numéro de groupe de raid", "Meine Raidgruppennummer anzeigen", "Mostrar mi número de grupo de banda",
@@ -152,8 +133,6 @@ W("Item level on each equipment slot", "Niveau d'objet sur chaque emplacement d'
 W("Durability percent on each equipment slot", "Pourcentage de durabilité sur chaque emplacement d'équipement", "Haltbarkeit in Prozent auf jedem Ausrüstungsplatz",
     "Porcentaje de durabilidad en cada ranura de equipo", "在每个装备栏显示耐久百分比", "각 장비 칸에 내구도 퍼센트 표시", "Прочность в процентах на каждом слоте экипировки",
     "各装備スロットに耐久度の割合を表示", "نسبة المتانة على كل خانة معدات")
-W("Hide the game's own totem buttons", "Masquer les boutons de totems du jeu", "Totem-Tasten des Spiels ausblenden", "Ocultar los botones de tótems del juego",
-    "隐藏游戏自带的图腾按钮", "게임 기본 토템 버튼 숨기기", "Скрыть стандартные кнопки тотемов", "ゲーム標準のトーテムボタンを隠す", "إخفاء أزرار الطواطم الأصلية")
 W("Experience and reputation", "Expérience et réputation", "Erfahrung und Ruf", "Experiencia y reputación", "经验与声望", "경험치와 평판", "Опыт и репутация",
     "経験値と評判", "الخبرة والسمعة")
 W("Octagon (orb)", "Octogone (orbe)", "Achteck (Kugel)", "Octógono (orbe)", "八边形（球）", "팔각형 (구슬)", "Восьмиугольник (шар)", "八角形（オーブ）", "مثمن (كرة)")

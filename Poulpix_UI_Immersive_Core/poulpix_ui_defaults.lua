@@ -134,8 +134,7 @@ ns.defaults = {
         crosshair = false, chSize = 12, chThick = 2, chGap = 3, chColour = "class", chCombat = true, chAlpha = 0.8, chDot = true,
         chatHistory = false, chatLines = 100, chatTabs = false },
     cw = { spellbook = false, macros = false, allRanks = false, pos = {} },
-    extras = { totems = false, totemSize = 32, totemGap = 4, totemTimer = true, totemEmpty = false, totemHideBlizz = false,
-        groupBadge = false, groupBadgeSize = 14, charIlvl = false, charDura = false, tot = false, totName = true, pet = false, petName = true },
+    extras = { groupBadge = false, groupBadgeSize = 14, charIlvl = false, charDura = false, tot = false, totName = true, pet = false, petName = true },
     healFx = { absorbPlayer = true, absorbTarget = true, absorbPlates = false, healPlayer = false, healTarget = false, healPlates = false,
         absorbFocus = true, healFocus = false },
     xpbar = { style = "icon", size = 64, textFormat = "none", textPos = nil, textSize = 10, source = "xp" },
@@ -171,7 +170,7 @@ ns.defaults = {
         grow = { cdEssential = "down", cdUtility = "down", cdBuffs = "down" } },
     brush = { elements = "paint", windows = "paint", camera = "paint", tooltips = "paint", tooltipsOwn = true, plates = "none", by = {}, byWin = {} },
     layers = { tcast = 3, tbuffs = 3, tdebuffs = 3, pbuffs = 3, pdebuffs = 3, location = 1, icon = 2, micro = 2, bags = 2, target = 3, focus = 3, fcast = 3, fbuffs = 3, fdebuffs = 3, player = 3, power = 3, cast = 3, minimap = 3,
-        clock = 3, quest = 3, prompts = 3, xp = 3, bar1 = 3, bar2 = 3, bar3 = 3, bar4 = 3, bar5 = 3, bar6 = 3, bar7 = 3, bar8 = 3, stance = 3, pet = 3, totems = 3, threat = 3, swing = 3, callTotems = 3, flight = 2, lootFeed = 2, junk = 2, fps = 2, kick = 3, dataBar = 2, selfText = 3, alerts = 4, mobility = 3, crosshair = 3, groupBadge = 3, tot = 3, petHp = 3, combo = 3 },
+        clock = 3, quest = 3, prompts = 3, xp = 3, bar1 = 3, bar2 = 3, bar3 = 3, bar4 = 3, bar5 = 3, bar6 = 3, bar7 = 3, bar8 = 3, stance = 3, pet = 3, threat = 3, swing = 3, callTotems = 3, flight = 2, lootFeed = 2, junk = 2, fps = 2, kick = 3, dataBar = 2, selfText = 3, alerts = 4, mobility = 3, crosshair = 3, groupBadge = 3, tot = 3, petHp = 3, combo = 3 },
     plateCast = { pos = "below", width = 100, height = 3, x = 0, y = 0, text = true, textPos = "below", textX = 0, textY = 0 },
     plateSize = { width = 110, height = 6 },
     combo = { shape = "flat", width = 12, height = 4, gap = 3, x = 0, y = 0, pos = "below" },
@@ -399,7 +398,6 @@ ns.defaults = {
         pdebuffs = { point = "TOPRIGHT",   x = -250, y = -100, scale = 1, width = 316, height = 76 },
         icon    = { point = "CENTER",      x = -219, y = -250, scale = 1, width = 22, height = 22 },
         combo   = { point = "CENTER",      x = 0,    y = -280, scale = 1, width = 72, height = 4 },
-        totems     = { point = "CENTER",   x = 0,    y = -190, scale = 1, width = 140, height = 32 },
         groupBadge = { point = "CENTER",   x = -175, y = -232, scale = 1, width = 60,  height = 22 },
         tot        = { point = "TOP",      x = 230,  y = -64,  scale = 1, width = 110, height = 22 },
         petHp      = { point = "CENTER",   x = -300, y = -262, scale = 1, width = 90,  height = 22 },
@@ -662,11 +660,6 @@ do
         tdebuffs = {
             x = 84.7,
             y = -138.7,
-        },
-        totems = {
-            point = "BOTTOM",
-            x = 2.5,
-            y = 136.5,
         },
     },
     brush = {

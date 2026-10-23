@@ -363,12 +363,12 @@ local function PlaceVia(e, block, d)
 end
 function ns.Movers_Update()
     if not (ns.db and ns.blocks) then return end
-    if not mv.readyAt or GetTime() < mv.readyAt then return end
+    local early = not mv.readyAt or GetTime() < mv.readyAt
     local em = _G.EditModeManagerFrame
     local editing = em and em.IsShown and em:IsShown()
     for _, e in ipairs(MOVERS) do
         local block, d = ns.blocks[e.key], ns.db.blocks[e.key]
-        if block and d and type(e.mover()) == "table" then
+        if block and d and type(e.mover()) == "table" and not (early and d.adopt ~= false) then
             local adopted = d.adopt == false or Adopt(e, block, d)
             if adopted then
                 Fit(e, block, d)
@@ -444,10 +444,11 @@ function ns.Movers_Init()
     drv:SetScript("OnEvent", function(_, ev)
         if ev == "PLAYER_ENTERING_WORLD" and not mv.readyAt then mv.readyAt = GetTime() + 3 end
         mv.acc = 0.8
+        if ev == "PLAYER_ENTERING_WORLD" then pcall(ns.Movers_Update) end
     end)
     drv:SetScript("OnUpdate", (ns.PerfWrap or function(_, f) return f end)("timer: chat / meter placement", function(_, dt)
         mv.acc = mv.acc + dt
-        local every = (ns.state and ns.state.unlocked) and 0.05 or 1
+        local every = (ns.state and ns.state.unlocked) and 0.05 or ((not mv.readyAt or GetTime() < mv.readyAt + 2) and 0.1 or 1)
         if mv.acc < every then return end
         mv.acc = 0
         pcall(ns.Movers_Update)

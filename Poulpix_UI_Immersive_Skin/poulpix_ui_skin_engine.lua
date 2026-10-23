@@ -287,7 +287,7 @@ function H.FullWalk(f, keepArt, after, opts)
     local old = H.jobOf.full[f]
     if old then JobDone(old) end
     local job = H.Job("full", f, (shown and "first " or "background ") .. name,
-        { inc = false, gold = gold, green = gold and name == "CommunitiesFrame", front = shown }, after, f, opts)
+        { inc = false, gold = gold, green = gold and name == "CommunitiesFrame", front = shown, combatOK = not Call(f, "IsProtected") }, after, f, opts)
     job.push(SK.Recolor, f, 1)
     job.push(SK.DressTree, f, 1, keepArt)
     if shown then

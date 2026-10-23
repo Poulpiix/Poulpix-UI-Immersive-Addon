@@ -384,6 +384,17 @@ function ns.UpdateBlizzardFrames()
         end
     end
     for _, n in ipairs(TRACKERS) do AlphaFrame(_G[n], hide and s.tracker) end
+    local dura = _G.DurabilityFrame
+    if dura then
+        AlphaFrame(dura, hide)
+        if dura.EnableMouse then pcall(dura.EnableMouse, dura, not hide) end
+        if not hooked[dura] and dura.HookScript then
+            hooked[dura] = true
+            dura:HookScript("OnShow", function(self)
+                if ns.db and ns.db.global.hideBlizzard then self:SetAlpha(0) end
+            end)
+        end
+    end
     for _, n in ipairs(CASTBARS) do
         local f = _G[n]
         if f then
@@ -565,7 +576,26 @@ core:SetScript("OnEvent", function(self, event, arg1)
     end
 end)
 function ns.Unlock()
-    if InCombatLockdown() then ns.Print("Cannot unlock in combat.") return end
+    if InCombatLockdown() then
+        local now = GetTime()
+        if not state.unlockSaid or now - state.unlockSaid > 5 then
+            state.unlockSaid = now
+            ns.Print("Cannot unlock in combat: the game still counts you in combat.")
+        end
+        if ns.root then
+            ns.root.diag = ns.root.diag or {}
+            local why = {}
+            pcall(function()
+                why[#why + 1] = "player=" .. tostring(UnitAffectingCombat("player") and true or false)
+                why[#why + 1] = "pet=" .. tostring(UnitExists("pet") and UnitAffectingCombat("pet") and true or false)
+                why[#why + 1] = "target=" .. tostring(UnitExists("target") and UnitAffectingCombat("target") and true or false)
+            end)
+            local when = ""
+            pcall(function() when = date("%H:%M:%S") end)
+            ns.root.diag.UnlockWait = when .. " " .. table.concat(why, " ")
+        end
+        return
+    end
     if ns.CloseOptions then ns.CloseOptions() end
     state.unlocked = true
     ns.Reveal()
@@ -780,6 +810,9 @@ local function Slash(msg)
     elseif cmd == "macros" and ns.Macros_Toggle then
         ns.Macros_Toggle()
         return
+    elseif (cmd == "setup" or cmd == "tutorial" or cmd == "tuto") and ns.Setup_Open then
+        ns.Setup_Open()
+        return
     end
     if cmd == "weapon" then
         if type(GetWeaponEnchantInfo) ~= "function" then
@@ -837,6 +870,7 @@ SLASH_POULPIXUI1 = "/ih"
 SLASH_POULPIXUI2 = "/poulpixui"
 SLASH_POULPIXUI3 = "/pui"
 SLASH_POULPIXUI4 = "/poulpix"
+SLASH_POULPIXUI5 = "/ui"
 SlashCmdList["POULPIXUI"] = Slash
 do
     local old = CreateFrame("Frame")

@@ -568,7 +568,7 @@ local function DressWindow(f, opts)
                     if pk == "OkayButton" or pk == "CancelButton" or pk == "OkButton" or k:find("okaybutton", 1, true) or k:find("cancelbutton", 1, true) then
                         local p, rel, rp, x, y = Call(c, "GetPoint", 1)
                         local relType = rel and TypeOf(rel) or ""
-                        if p and relType ~= "Button" then pcall(c.SetPoint, c, p, rel, rp, x, (y or 0) - 8) end
+                        if p and relType ~= "Button" and not (InCombatLockdown() and Call(c, "IsProtected")) then pcall(c.SetPoint, c, p, rel, rp, x, (y or 0) - 8) end
                     else
                         Walk(c, depth + 1)
                     end

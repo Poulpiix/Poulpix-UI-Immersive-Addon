@@ -631,6 +631,7 @@ end
 local charTab = {}
 local DressTree
 local function DressChild(c, depth, keepArt, push)
+    if InCombatLockdown() and Call(c, "IsProtected") then return end
     if type(c) == "table" and not Call(c, "IsForbidden") and c.CreateTexture and not charTab[c] and not ownStyled[c] then
         if type(c.ForEachFrame) == "function" then H.HookList(c) end
         if type(rawget(c, "MainRing")) == "table" then pcall(H.RingHeader, c) end

@@ -284,6 +284,26 @@ function ns.Report_Text()
     end
     Blocked("Blocked actions, this session", "Blocked")
     Blocked("Blocked actions, previous session", "BlockedPrev")
+    H("Combat auras (game container)")
+    do
+        local dg = ns.root and ns.root.diag
+        local eng = dg and dg.AuraEngine
+        if type(eng) == "table" then
+            L("name: " .. S(eng.name) .. ", bar: " .. S(eng.bar))
+        else
+            L("not used yet this session (fight once, then report)")
+        end
+        if dg and type(dg.AuraContainer) == "string" then L("container: " .. dg.AuraContainer) end
+        if dg and type(dg.AuraSort) == "string" then L("sort by time: " .. dg.AuraSort) end
+        if dg and type(dg.UnlockWait) == "string" then L("last unlock wait: " .. dg.UnlockWait) end
+        if dg and type(dg.AuraMode) == "table" then
+            for _, m in ipairs(dg.AuraMode) do L("mode " .. S(m)) end
+        end
+        local fit = dg and dg.AuraFit
+        if type(fit) == "table" then
+            for k, v in pairs(fit) do L(S(k) .. ": " .. S(v)) end
+        end
+    end
     H("Window art left visible (open windows)")
     if ns.Skin_Undecided then
         local ok, list = pcall(ns.Skin_Undecided, 40)
@@ -554,6 +574,7 @@ function ns.Report_MemProfile(seconds, done)
 end
 local HELP = {
     "/ih : settings",
+    "/ui setup : setup wizard for this character (also /ui tutorial)",
     "/ih unlock, /ih lock : move the HUD elements",
     "/ih reset : reset this profile",
     "/ih report : support report to copy (errors, settings, add-ons)",

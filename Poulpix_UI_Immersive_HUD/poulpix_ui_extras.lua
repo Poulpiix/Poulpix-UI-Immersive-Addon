@@ -7,144 +7,6 @@ local function ShowIf(f, cond)
     if not f then return end
     if cond then f:Show() else f:Hide() end
 end
-local totems
-local slots = {}
-local SAMPLE = {
-    { true, "Searing Totem", 0, 55, "Interface\\Icons\\Spell_Fire_SearingTotem" },
-    { true, "Stoneskin Totem", 0, 90, "Interface\\Icons\\Spell_Nature_StoneSkinTotem" },
-    { false },
-    { true, "Windfury Totem", 0, 20, "Interface\\Icons\\Spell_Nature_Windfury" },
-}
-local function IsShaman()
-    local _, class = UnitClass("player")
-    return class == "SHAMAN"
-end
-local function TotemInfo(slot)
-    if ns.state.sim then
-        local s = SAMPLE[slot]
-        if not s or not s[1] then return false end
-        local d = s[4]
-        local start = GetTime() - ((GetTime() * 1) % d)
-        return true, s[2], start, d, s[5]
-    end
-    if not GetTotemInfo then return false end
-    local ok, have, name, start, dur, icon = pcall(GetTotemInfo, slot)
-    if not ok or not have then return false end
-    return true, name, start, dur, icon
-end
-local function Remaining(start, dur)
-    if type(start) ~= "number" or type(dur) ~= "number" or dur <= 0 then return nil end
-    return math.max(0, start + dur - GetTime())
-end
-local function FormatTime(s)
-    if s >= 60 then return string.format("%dm", math.floor(s / 60 + 0.5)) end
-    return string.format("%d", math.ceil(s))
-end
-local function MakeSlot(i)
-    local b = CreateFrame("Button", nil, totems)
-    b.icon = b:CreateTexture(nil, "ARTWORK")
-    b.icon:SetAllPoints(b)
-    b.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-    b.empty = b:CreateTexture(nil, "BACKGROUND")
-    b.empty:SetTexture(WHITE)
-    b.empty:SetAllPoints(b)
-    b.empty:SetVertexColor(0, 0, 0, 0.35)
-    local ok, cd = pcall(CreateFrame, "Cooldown", nil, b, "CooldownFrameTemplate")
-    if ok and cd then
-        cd:SetAllPoints(b)
-        if cd.SetDrawEdge then pcall(cd.SetDrawEdge, cd, false) end
-        if cd.SetHideCountdownNumbers then pcall(cd.SetHideCountdownNumbers, cd, true) end
-        if cd.EnableMouse then cd:EnableMouse(false) end
-        b.cd = cd
-    end
-    local top = CreateFrame("Frame", nil, b)
-    top:SetAllPoints(b)
-    top:SetFrameLevel(b:GetFrameLevel() + 3)
-    top:EnableMouse(false)
-    b.text = ns.MakeText(top, 11, "CENTER")
-    b.text:SetPoint("CENTER", b, "BOTTOM", 0, 6)
-    b.slot = i
-    b:SetScript("OnEnter", function(self)
-        if not self.name then return end
-        if ns.ShowTip then
-            local r = Remaining(self.start, self.dur)
-            local lines = { { self.name, 0.95, 0.85, 0.55, 12 } }
-            if r then lines[#lines + 1] = { FormatTime(r), 0.85, 0.85, 0.8, 11 } end
-            ns.ShowTip(self, lines)
-        end
-    end)
-    b:SetScript("OnLeave", function() if ns.HideTip then ns.HideTip() end end)
-    return b
-end
-local function UpdateTotems()
-    if not totems then return end
-    local o = X()
-    local preview = ns.Preview()
-    local on = o.totems and (IsShaman() or ns.state.sim or ns.state.unlocked)
-    if TotemFrame then pcall(TotemFrame.SetAlpha, TotemFrame, (o.totems and o.totemHideBlizz) and 0 or 1) end
-    ShowIf(totems, on)
-    if not on then
-        ns.SetContent(totems, false)
-        return
-    end
-    local size, gap = o.totemSize or 32, o.totemGap or 4
-    local showEmpty = o.totemEmpty or preview
-    local list, active = {}, 0
-    for slot = 1, 4 do
-        local have, name, start, dur, icon = TotemInfo(slot)
-        if have then active = active + 1 end
-        if have or showEmpty then list[#list + 1] = { slot, have, name, start, dur, icon } end
-    end
-    local n = math.max(1, #list)
-    totems:SetWidth(n * size + (n - 1) * gap)
-    totems:SetHeight(size)
-    for i = 1, 4 do
-        local b = slots[i]
-        local e = list[i]
-        if not e then
-            b:Hide()
-        else
-            b:SetSize(size, size)
-            b:ClearAllPoints()
-            b:SetPoint("TOPLEFT", totems, "TOPLEFT", (i - 1) * (size + gap), 0)
-            b.slot = e[1]
-            b.name, b.start, b.dur = e[3], e[4], e[5]
-            if e[2] then
-                b.icon:SetTexture(e[6])
-                b.icon:Show()
-                b.empty:SetVertexColor(0, 0, 0, 0.35)
-                if b.cd and type(e[4]) == "number" and type(e[5]) == "number" then pcall(b.cd.SetCooldown, b.cd, e[4], e[5]) end
-                if o.totemTimer ~= false then
-                    local r = Remaining(e[4], e[5])
-                    b.text:SetText(r and FormatTime(r) or "")
-                else
-                    b.text:SetText("")
-                end
-            else
-                b.icon:Hide()
-                b.empty:SetVertexColor(0, 0, 0, 0.6)
-                if b.cd then pcall(b.cd.Clear, b.cd) end
-                b.text:SetText("")
-            end
-            b:Show()
-        end
-    end
-    ns.SetContent(totems, active > 0 or preview)
-end
-local function CreateTotems()
-    totems = ns.CreateBlock("totems", "Totems", false)
-    totems.autoSize = true
-    totems:SetSize(140, 32)
-    for i = 1, 4 do slots[i] = MakeSlot(i) end
-    local acc = 0
-    totems:SetScript("OnUpdate", function(_, dt)
-        acc = acc + dt
-        if acc < 0.25 then return end
-        acc = 0
-        if totems:IsShown() then pcall(UpdateTotems) end
-    end)
-    ns.SetContent(totems, false)
-end
 local badge
 local function RaidGroup()
     if ns.state.sim or ns.state.unlocked then return 3 end
@@ -350,21 +212,20 @@ end
 function ns.Extras_Update()
     pcall(HookCharacterSheet)
     pcall(UpdateCharacterSheet)
-    pcall(UpdateTotems)
     pcall(UpdateBadge)
     for _, f in ipairs(unitBlocks) do pcall(UpdateUnitBlock, f) end
 end
 ns.Extras_Apply = ns.Extras_Update
 function ns.Extras_Init()
-    if not ns.CreateBlock or totems then return end
-    CreateTotems()
+    if not ns.CreateBlock or badge then return end
+    if TotemFrame then pcall(TotemFrame.SetAlpha, TotemFrame, 1) end
     CreateBadge()
     MakeUnitBlock("tot", "Target of target", "targettarget", "tot", "totName", "Defias Thug", "targetHostile")
     MakeUnitBlock("petHp", "Pet health bar", "pet", "pet", "petName", "Pet", "targetFriendly")
     MakeClickers()
     local ev = CreateFrame("Frame")
     for _, e in ipairs({ "PLAYER_REGEN_ENABLED", "PLAYER_ENTERING_WORLD", "GROUP_ROSTER_UPDATE", "RAID_ROSTER_UPDATE",
-        "PLAYER_TOTEM_UPDATE", "PLAYER_EQUIPMENT_CHANGED", "UPDATE_INVENTORY_DURABILITY", "PLAYER_TARGET_CHANGED", "UNIT_TARGET", "UNIT_PET", "UNIT_NAME_UPDATE" }) do
+        "PLAYER_EQUIPMENT_CHANGED", "UPDATE_INVENTORY_DURABILITY", "PLAYER_TARGET_CHANGED", "UNIT_TARGET", "UNIT_PET", "UNIT_NAME_UPDATE" }) do
         pcall(ev.RegisterEvent, ev, e)
     end
     ev:SetScript("OnEvent", function(_, event)

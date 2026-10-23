@@ -127,7 +127,7 @@ local function Distance(unit)
         end
     end
     local fight = InCombatLockdown and InCombatLockdown()
-    for _, it in ipairs((fight and hostile) and {} or INTERACT) do
+    for _, it in ipairs(fight and {} or INTERACT) do
         local r = P(CheckInteractDistance, unit, it[1])
         if r == true or r == 1 then
             if not hi or it[2] < hi then hi = it[2] end
